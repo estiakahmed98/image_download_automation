@@ -1,4 +1,12 @@
 @echo off
+setlocal
 cd /d "%~dp0"
-.venv\Scripts\python.exe main.py --input "Products Name.txt" --category "Accessories/Keyboard" --max-images 5
+if not exist ".venv\Scripts\python.exe" (
+  echo Python environment not found. Run setup_windows.bat first.
+  pause
+  exit /b 1
+)
+".venv\Scripts\python.exe" main.py %*
+set "download_exit=%errorlevel%"
 pause
+exit /b %download_exit%

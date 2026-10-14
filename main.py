@@ -8,7 +8,7 @@ from __future__ import annotations
 import argparse
 from contextlib import contextmanager
 import csv
-import hashlib
+import errno
 import io
 import json
 import logging
@@ -18,7 +18,7 @@ import re
 import sys
 import time
 from tempfile import NamedTemporaryFile
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -62,7 +62,9 @@ def file_lock(path: Path, *, wait: bool = True):
                         import fcntl
                         fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                     acquired = True
-                except OSError:
+                except OSError as ex:
+                    if ex.errno not in {errno.EACCES, errno.EAGAIN, errno.EDEADLK}:
+                        raise
                     if not wait:
                         raise ValueError(f"Another terminal is already using this output category: {path.parent}")
                     time.sleep(0.1)
@@ -567,7 +569,10 @@ def prepare_existing_image(row: dict[str, Any], target: Path) -> dict[str, Any] 
     png = original.with_suffix(".png")
     if local_image(target, png.name) is None:
         return None
-    alternatives = [original, local_image(target, row.get("webp"))]
+    webp = local_image(target, row.get("webp"))
+    alternatives = [original]
+    if webp is not None and webp.stem.casefold() == png.stem.casefold():
+        alternatives.append(webp)
     if target.is_dir():
         alternatives.extend(file for file in target.iterdir()
                             if file.stem.casefold() == png.stem.casefold()
@@ -616,13 +621,13 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
     old = existing_data or {}
     if manifest_path.exists():
         try:
-            old = json.loads(manifest_path.read_text(encoding="utf-8"))
+            old = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
             if not isinstance(old, dict):
                 raise ValueError(f"Invalid product manifest: {manifest_path}")
         except (OSError, json.JSONDecodeError) as ex:
             logging.warning("Cannot read %s: %s", manifest_path, ex)
             old = existing_data or {}
-    if old and old.get("product") != product:
+    if old and str(old.get("product", "")).casefold() != product.casefold():
         raise ValueError(f"Product filename collision: {product} and {old.get('product')}")
     if args.force:
         for row in old.get("images", []):
@@ -650,7 +655,8 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
         write_json(manifest_path, data)
         logging.info("SKIP (resume, PNG ready) %s", product)
         return data
-    official, errs = official_search(product, brand, model, variants, official_domains, net, args.browser)
+    official, errs = (official_search(product, brand, model, variants, official_domains, net, args.browser)
+                      if len(downloaded) < args.max_images else ([], []))
     errors.extend(errs)
     candidates = official
     # Fallback only after exhausting download-eligible official galleries.
@@ -669,7 +675,6 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
                 hval = perceptual_hash(im)
                 if any((hval ^ old).bit_count() <= 2 for old in seen_hashes):
                     continue
-                idx = len(downloaded)
                 used_names = {row["png"].casefold() for row in downloaded}
                 idx = 0
                 while True:
@@ -715,9 +720,14 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
 
 def run(args: argparse.Namespace) -> None:
     source = Path(args.input).expanduser().resolve()
-    if not source.exists():
+    if not source.is_file():
         raise FileNotFoundError(f"File not found: {source}")
-    categories = [safe_name(x) for x in re.split(r"[/\\]+", args.category) if x.strip() not in ("", ".", "..")]
+    category = args.category
+    if category is None:
+        category = "Accessories/Keyboard" if source.name.casefold() == "products name.txt" else safe_name(source.stem)
+    categories = [safe_name(x) for x in re.split(r"[/\\]+", category) if x.strip() not in ("", ".", "..")]
+    if not categories:
+        raise ValueError("Category must name an output subfolder")
     output_root = Path(args.output).expanduser().resolve()
     path = output_root.joinpath(*categories)
     path.mkdir(parents=True, exist_ok=True)
@@ -726,20 +736,49 @@ def run(args: argparse.Namespace) -> None:
     if not isinstance(brands, dict):
         raise ValueError("brands.json must contain a dictionary")
     products = read_products(source)
+    if not products:
+        raise ValueError(f"No product names found in {source}")
     if args.limit:
         products = products[:args.limit]
-    print(f"Products: {len(products)} | output: {path}")
-    net = Internet(args.timeout, args.delay)
+    merged_path = (Path(args.manifest).expanduser().resolve() if args.manifest else
+                   (ROOT if output_root == (ROOT / "output").resolve() else output_root) / "all_products_manifest.json")
+    report_dir = path / "_reports"
+    print(f"Input: {source}\nProducts: {len(products)} | output: {path}\nManifest: {merged_path}")
+    # Different categories can run together. Identical output categories cannot.
+    with file_lock(path / ".download.lock", wait=False):
+        with file_lock(merged_path.with_name(merged_path.name + ".lock")):
+            previous = read_merged_manifest(merged_path)
+        net = Internet(args.timeout, args.delay)
+        try:
+            run_products(args, products, path, output_root, report_dir, brands, net, merged_path, previous)
+        finally:
+            net.session.close()
+    print("Done. Reports:", report_dir)
+
+
+def run_products(args: argparse.Namespace, products: list[str], path: Path, output_root: Path,
+                 report_dir: Path, brands: dict[str, list[str]], net: Internet,
+                 merged_path: Path, previous: dict[str, dict[str, Any]]) -> None:
     report, image_report = [], []
     for index, product in enumerate(products, start=1):
         logging.info("[%d/%d] %s", index, len(products), product)
+        brand = brand_and_model(product, brands)[0]
+        target = path / safe_name(brand or "Unknown")
+        checkpoint = target / f".{safe_name(product)}.manifest.json"
+        source_file = str(checkpoint.relative_to(output_root))
+        existing = previous.get(manifest_key(source_file), {}).get("data")
         try:
-            data = process(product, path, brands, net, args)
+            data = process(product, path, brands, net, args, existing)
         except Exception as ex:
             logging.exception("Unexpected error for %s", product)
             data = {"product": product, "status": "FAILED", "images": [], "reason": f"Unexpected error: {ex}", "completed_at": now_iso()}
+        else:
+            # A verified shared save must finish before removing the checkpoint.
+            # Merge errors stop this run, preserving recoverable local metadata.
+            merge_product(merged_path, source_file, data)
+            previous[manifest_key(source_file)] = {"source_file": source_file, "data": data}
+            checkpoint.unlink(missing_ok=True)
         images = data.get("images", [])
-        brand = brand_and_model(product, brands)[0]
         report.append({
             "product": product, "status": data.get("status", "FAILED"),
             "downloaded": len(images), "reason": data.get("reason", ""),
@@ -747,25 +786,26 @@ def run(args: argparse.Namespace) -> None:
         })
         for im in images:
             image_report.append({
-                "product": product, "file_png": im["png"], "file_webp": im["webp"],
+                "product": product, "file_png": im["png"],
                 "source_type": im["source_type"], "product_page": im["product_page"],
                 "image_url": im["image_url"], "source_title": im["source_title"],
                 "width": im["width"], "height": im["height"],
             })
-        write_csv(output_root / "reports" / "products_status.csv", REPORT_COLUMNS, report)
-        write_csv(output_root / "reports" / "image_sources.csv", IMAGE_COLUMNS, image_report)
+        write_csv(report_dir / "products_status.csv", REPORT_COLUMNS, report)
+        write_csv(report_dir / "image_sources.csv", IMAGE_COLUMNS, image_report)
         count = len(images)
         print(f"{index:>4}/{len(products)} | {data.get('status')} | {count} images | {product}")
-    print("Done. Reports:", output_root / "reports")
 
 
 def cli() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Download product photos from official brand product pages first, and exact-model image search second.")
-    p.add_argument("--input", default=str(ROOT / "Products Name.txt"))
+    p.add_argument("input_file", nargs="?", help="Plain-text product list; any extension, including .txt/.tsx")
+    p.add_argument("--input", help="Product-list file (alternative to the positional filename)")
     p.add_argument("--brands", default=str(ROOT / "brands.json"))
     p.add_argument("--output", default=str(ROOT / "output"))
-    p.add_argument("--category", default="Accessories/Keyboard")
-    p.add_argument("--max-images", type=int, default=5, help="TOTAL distinct images, 1-5. Example 5 -> base and suffixes 1..4")
+    p.add_argument("--category", help="Output subfolder; defaults to the input filename without extension")
+    p.add_argument("--manifest", help="Merged JSON destination; default: project root (custom output: output folder)")
+    p.add_argument("--max-images", type=int, default=5, help="TOTAL distinct PNG images, 1-20. Example 5 -> base and suffixes 1..4")
     p.add_argument("--limit", type=int, default=0, help="0 processes all products")
     p.add_argument("--min-side", type=int, default=400, help="Smallest dimension in pixels; reduce if images are skipped")
     p.add_argument("--max-mb", type=int, default=25)
@@ -774,12 +814,16 @@ def cli() -> argparse.Namespace:
     p.add_argument("--official-only", action="store_true", help="Never fetch photos from third-party sites")
     p.add_argument("--browser", action="store_true", help="Render JS product galleries via optional Playwright+Chromium")
     p.add_argument("--retry-incomplete", action="store_true", help="Retry products with fewer than max-images (keep existing files)")
-    p.add_argument("--force", action="store_true", help="Redo completed products and overwrite pairs from image 1")
+    p.add_argument("--force", action="store_true", help="Redo completed products and overwrite PNGs from the first image")
     p.add_argument("--verbose", action="store_true")
     args = p.parse_args()
+    if args.input and args.input_file:
+        p.error("Supply either a positional filename or --input, not both")
+    args.input = args.input or args.input_file or str(ROOT / "Products Name.txt")
     if not 1 <= args.max_images <= 20:
         p.error("--max-images must be 1 to 20")
-    if args.min_side < 50 or args.max_mb < 1 or args.delay < 0 or args.limit < 0:
+    if (args.min_side < 50 or args.max_mb < 1 or args.delay < 0 or args.limit < 0
+            or args.timeout <= 0):
         p.error("Invalid limits")
     logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG if args.verbose else logging.INFO)
     return args

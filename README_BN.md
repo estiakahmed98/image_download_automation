@@ -1,105 +1,95 @@
-# Deshi Plus — Product Image Downloader (Official-first)
+﻿# Deshi Plus — Product Image Downloader
 
-`Products Name.txt` থেকে প্রতি লাইনে একটি পণ্যের নাম পড়ে brand-এর official product page থেকে আসল resolution-এর ছবি সংগ্রহ করার চেষ্টা করে। Official image না পেলে exact-model image search থেকে fallback নেয়। ছবি **PNG এবং lossless WebP** দুই ফরম্যাটেই রাখে। কোনো ছবি upscale/crop করে না।
+`main.py` এখন download, PNG conversion, JPG/WebP duplicate cleanup এবং manifest merge একসঙ্গে করে। আলাদা করে `convert_to_png.py`, `delete_webp.py` বা `merge_json.py` চালাতে হবে না। নতুন image সরাসরি PNG হিসেবে save হয়; resolution ও transparency বজায় থাকে, upscale/crop করা হয় না। Official product-page search ও exact-model fallback আগের মতো আছে।
 
-## Windows: প্রথমবার চালানো
+## Setup
 
-1. Python **3.10 বা নতুন** install করুন (`Add python.exe to PATH` সিলেক্ট করুন)।
-2. ZIP extract করে **`setup_windows.bat`** চালান।
-3. `Products Name.txt`-এ নিজের product name লিখুন: **প্রতি লাইনে একটি নাম, UTF-8 encoding**। Sample ৩০টি নাম রাখা হয়েছে, চাইলে replace করুন।
-4. প্রথমে **`run_10.bat`** চালিয়ে ১০টি product test করুন।
-5. ঠিক থাকলে **`run_all.bat`** চালান। বন্ধ/ক্র্যাশ হলে একই command আবার চালান—completed products skip করবে।
+Python 3.10+ install করে একবার `setup_windows.bat` চালান। আগে setup করা থাকলে আবার লাগবে না।
 
-কমান্ড দিয়ে চালাতে চাইলে PowerShell-এ:
+## Product list দিয়ে চালানো
 
-```powershell
-cd "D:\YourFolder\Product_Image_Downloader"
-.venv\Scripts\python.exe main.py --category "Accessories/Keyboard" --limit 10 --max-images 5
-.venv\Scripts\python.exe main.py --category "Accessories/Keyboard" --max-images 5
-```
+প্রতি লাইনে একটি product name দিন; file UTF-8 encoding-এ save করুন। `.txt`, `.tsx` অথবা অন্য extension চলবে। `.tsx`-এর ভিতরেও সাধারণ product-name list থাকবে, React/TypeScript code নয়। ফাঁকা line, `#` comment ও একই নামের duplicate line বাদ দেওয়া হয়।
 
-`--max-images 5` মানে **মোট পাঁচটি** ভিন্ন ছবি: `Product Name.png`, `Product Name 1.png` ... `Product Name 4.png` (একই naming-এর `.webp`)। প্রথম ফাইলসহ **ছয়টি** চাইলে `--max-images 6` লিখুন। সব product-এর পাঁচটি ছবি পাওয়া নিশ্চিত নয়।
-
-## ফোল্ডার
-
-```text
-Product_Image_Downloader/
-  Products Name.txt
-  brands.json
-  main.py
-  setup_windows.bat
-  run_10.bat
-  run_all.bat
-  output/
-    Accessories/
-      Keyboard/
-        1STPLAYER/
-          1STPLAYER KM2 Keyboard Mouse Combo.png
-          1STPLAYER KM2 Keyboard Mouse Combo.webp
-          1STPLAYER KM2 Keyboard Mouse Combo 1.png
-          1STPLAYER KM2 Keyboard Mouse Combo 1.webp
-          .1STPLAYER KM2 Keyboard Mouse Combo.manifest.json
-          1STPLAYER NEO87 Keyboard.png
-          ...
-        8BitDo/
-          8BitDo Retro 108 Tri-Mode Wireless Mechanical Keyboard.png
-          ...
-  reports/
-    products_status.csv
-    image_sources.csv
-```
-
-- প্রতিটি brand-এর জন্য একটি folder হয়; একই brand-এর সব পণ্যের image সেই folder-এর সরাসরি ভেতরে থাকে।
-- আলাদা hidden manifest file প্রতিটি product-এর resume তথ্য রাখে; এতে একই brand-এর অন্য image মুছে যায় না।
-- `products_status.csv`: প্রতিটি product-এর **COMPLETE**, **PARTIAL**, **FAILED**, **REVIEW_RIGHTS** স্ট্যাটাস।
-- `image_sources.csv`: কোন ছবি কোন URL, কোন page, কোন resolution থেকে এসেছে।
-- `manifest.json`: item-specific resume তথ্য।
-- `REVIEW_RIGHTS`: third-party উৎস থেকে আসা ছবি। **Publish করার আগে model/variant এবং reuse permission অবশ্যই যাচাই করুন।**
-
-## গুরুত্বপূর্ণ commands
+Project folder-এর PowerShell-এ:
 
 ```powershell
-# শুধু manufacturer site থেকে সংগ্রহ
-.venv\Scripts\python.exe main.py --official-only --max-images 5
+# Terminal 1
+.\run_all.bat Mouse.tsx
 
-# ২০টি, নতুন category-তে
-.venv\Scripts\python.exe main.py --category "Component/SSD" --limit 20
+# Terminal 2 — প্রথম terminal চলার সময়ই চালাতে পারবেন
+.\run_all.bat Printer.tsx
 
-# আগের PARTIAL product-গুলোর বাকি ছবি খোঁজা; পূর্বের ছবি না মুছে
-.venv\Scripts\python.exe main.py --retry-incomplete
+# Filename-এ space থাকলে quotes দিন
+.\run_all.bat "Gaming Mouse.txt"
 
-# আগের output নতুন করে সংগ্রহ (সেই product-এর পুরনো image বাদ দেবে)
-.venv\Scripts\python.exe main.py --force
+# Filename না দিলে আগের Products Name.txt ব্যবহার হবে
+.\run_all.bat
 
-# Site-এ JavaScript-only product gallery থাকলে ঐচ্ছিক browser render
-.venv\Scripts\python.exe -m pip install playwright
-.venv\Scripts\python.exe -m playwright install chromium
-.venv\Scripts\python.exe main.py --browser --limit 10
+# নির্বাচিত list-এর প্রথম 10টি product
+.\run_10.bat Mouse.tsx
+```
 
-# Resolution threshold একটু কমানো (কম ছবি পাওয়া গেলে)
-.venv\Scripts\python.exe main.py --min-side 250 --retry-incomplete
+Relative filename project folder থেকে খোঁজা হয়। অন্য folder-এর file হলে absolute path দিন:
+
+```powershell
+.\run_all.bat "D:\Product Lists\Printer.tsx"
+```
+
+## Output ও একসঙ্গে একাধিক run
+
+Filename থেকে default output category হয়:
+
+| Input | Images | Reports |
+| --- | --- | --- |
+| `Mouse.tsx` | `output/Mouse/<Brand>/` | `output/Mouse/_reports/` |
+| `Printer.tsx` | `output/Printer/<Brand>/` | `output/Printer/_reports/` |
+| `Products Name.txt` | `output/Accessories/Keyboard/<Brand>/` | `output/Accessories/Keyboard/_reports/` |
+
+একই category-তে একসঙ্গে দ্বিতীয় run শুরু করলে error দেবে, যাতে image overwrite না হয়। ভিন্ন category একসঙ্গে চলবে। একই basename-এর input (যেমন `Mouse.txt` ও `Mouse.tsx`) একই default category পাবে; আলাদা চাইলে `--category` দিন।
+
+সব category-এর metadata project root-এর **`all_products_manifest.json`**-এ যোগ হয়। আগে থাকা entries রাখা হয়; একই product/category-এর entry update হয়। File lock ও atomic save থাকার কারণে একাধিক terminal-এর manifest update একে অপরের তথ্য হারায় না। `.lock` files থাকা স্বাভাবিক; script বন্ধ হলে OS নিজেই lock ছেড়ে দেয়।
+
+প্রতি brand-এর folder-এ naming আগের মতো: `Product Name.png`, `Product Name 1.png`, `Product Name 2.png` ইত্যাদি। `--max-images 5` মানে মোট ৫টি distinct image; `1` থেকে `20` পর্যন্ত দেওয়া যায়। প্রতিটি product-এর সব requested image পাওয়া নিশ্চিত নয়।
+
+প্রতি category-এর `_reports/` folder-এ `products_status.csv` এবং `image_sources.csv` থাকে। নতুন report-এ PNG filename, source URL, product page ও resolution থাকে।
+
+## পুরোনো images ও resume
+
+নির্বাচিত list-এর প্রতিটি product-এর পুরোনো metadata merged JSON অথবা local `.manifest.json` থেকে পড়া হয়। PNG অনুপস্থিত/invalid হলে সেই record-এর JPG/JPEG/WebP থেকে PNG তৈরি করে। PNG যাচাই করার পর একই basename-এর JPG/JPEG/WebP copy মুছে দেয়। অন্য product/category-এর images cleanup করে না।
+
+Shared manifest-এ verify করে save হওয়ার পর product-এর local `.manifest.json` মুছে যায়। Merge ব্যর্থ হলে local manifest রাখা হয়, যাতে একই command আবার চালিয়ে recover করা যায়। আগের `merge_json.py` দিয়ে local manifest মুছে ফেললেও merged JSON থেকে resume হবে। পুরোনো merged entries নতুনভাবে process হলে তাদের WebP filename সরিয়ে PNG metadata রাখা হয়।
+
+একই command আবার চালালে valid existing PNG-সহ products skip হয়। Missing image ও image-বিহীন FAILED product আবার চেষ্টা করা হয়। কম image পাওয়া product-এর বাকি images খুঁজতে `--retry-incomplete` ব্যবহার করুন।
+
+## Options
+
+Batch scripts অতিরিক্ত options-ও `main.py`-তে পাঠায়:
+
+```powershell
+.\run_all.bat Mouse.tsx --max-images 8
+.\run_all.bat Printer.tsx --category "Office/Printer"
+.\run_all.bat Mouse.tsx --retry-incomplete
+.\run_all.bat Mouse.tsx --min-side 250 --retry-incomplete
+.\run_all.bat Mouse.tsx --official-only
+.\run_all.bat Mouse.tsx --force
+
+# সরাসরি Python দিয়েও চলবে
+.\.venv\Scripts\python.exe main.py Mouse.tsx
+.\.venv\Scripts\python.exe main.py --input "Printer.tsx"
+```
+
+`--force` সেই product-এর recorded images বাদ দিয়ে নতুন করে download করে। `--output` দিয়ে অন্য output root দিলে default merged JSON সেই output folder-এর `all_products_manifest.json` হয়। `--manifest` দিয়ে JSON destination আলাদা করা যায়; একই output root ব্যবহার করা সব concurrent run-এ একই manifest destination ব্যবহার করুন।
+
+JavaScript gallery render দরকার হলে optional Playwright install করে `--browser` দিন:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install playwright
+.\.venv\Scripts\python.exe -m playwright install chromium
+.\run_all.bat Mouse.tsx --browser
 ```
 
 ## Brand configuration
 
-`brands.json`-এ নাম আর approved **official domain** দিন। যেমন:
+`brands.json`-এ brand-এর নাম ও official domains দিন। Product name-এর শুরুতে brand রাখুন। Unknown brand `Unknown` folder-এ যায়; reliable model token না পাওয়া গেলে manual review দরকার হয়।
 
-```json
-{
-  "1STPLAYER": ["1stplayer.com"],
-  "8BitDo": ["8bitdo.com"],
-  "A4TECH": ["a4tech.com", "bloody.com"]
-}
-```
-
-নতুন brand না থাকলে brands.json-এ add করুন। Brand name প্রোডাক্ট নামের শুরুতে থাকা উচিত। Model token অটোমেটিক চিনতে না পারলে system ভুল মডেলের ছবি নেওয়ার বদলে FAILED/Review করে। কিছু নামের মধ্যে model নেই বা model inference কঠিন—সেগুলোর জন্য ম্যানুয়াল সমাধান দরকার হবে।
-
-## বাস্তব সীমাবদ্ধতা
-
-- এটি **প্রথম সংস্করণ**, live multi-site success guarantee নয়। প্রতিটি brand-এর HTML আলাদা। Javascript, anti-bot, CAPTCHAs, search rate limits, robots.txt, hotlink protection থাকলে skip করবে।
-- Search matching একটি **text heuristic**; ১০০% model/variant verified নয়। Publish করার আগে ছবি দেখে confirm করুন; especially variant/color/switch।
-- কোনো CAPTCHA bypass, access restriction bypass, rate-limit circumvention করা হয় না। Website-এর terms এবং image usage permission মানতে হবে। Manufacturer-এর ছবি হলেও commercial reuse automatic অনুমোদিত নয়।
-- TXT reading খুব দ্রুত; আসল সময় যায় web searching এবং downloading-এ। অনেক হাজার পণ্যের জন্য API/licensed distributor feed সবচেয়ে reliable/scalable।
-- Progress ও report file নিয়মিত লেখা হয়। Python 3.10+ এবং Internet প্রয়োজন।
-
-Docs: https://github.com/deedy5/ddgs (search library); https://pillow.readthedocs.io/ (image processing).
+Search matching আগের text heuristic ব্যবহার করে। Reports-এ `COMPLETE`, `PARTIAL`, `FAILED` ও third-party image-এর জন্য `REVIEW_RIGHTS` থাকে। Search rate limits, robots.txt ও site access restrictions download আটকাতে পারে।

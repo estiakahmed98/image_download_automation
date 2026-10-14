@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from main import (
     brand_and_model, clean_product_line, contains_model, find_gallery_images,
-    model_match, perceptual_hash, read_products, safe_name, save_pair, process, Candidate,
+    model_match, perceptual_hash, read_products, safe_name, save_png, process, Candidate,
 )
 
 BRANDS = {"1STPLAYER": ["1stplayer.com"], "8BitDo": ["8bitdo.com"], "A4TECH": ["a4tech.com", "bloody.com"]}
@@ -61,14 +61,15 @@ class TestCore(unittest.TestCase):
         self.assertNotIn("/home-logo.png", [url for url, _ in images])
         self.assertEqual(len(images), 4)
 
-    def test_output_pairs_and_pixels(self):
+    def test_output_png_and_pixels(self):
         with tempfile.TemporaryDirectory() as td:
             im = Image.new("RGBA", (640, 480), (255, 1, 100, 145))
-            png, webp = save_pair(im, Path(td), "1STPLAYER KM2")
-            self.assertTrue(png.exists() and webp.exists())
-            with Image.open(png) as a, Image.open(webp) as b:
-                self.assertEqual(a.size, b.size)
-                self.assertEqual(a.getpixel((2, 3)), b.getpixel((2, 3)))
+            png = save_png(im, Path(td), "1STPLAYER KM2")
+            self.assertTrue(png.exists())
+            self.assertFalse(png.with_suffix(".webp").exists())
+            with Image.open(png) as saved:
+                self.assertEqual(saved.size, im.size)
+                self.assertEqual(saved.getpixel((2, 3)), im.getpixel((2, 3)))
             self.assertEqual(perceptual_hash(im), perceptual_hash(im.copy()))
 
     def test_process_outputs_and_resume_offline(self):
@@ -91,7 +92,8 @@ class TestCore(unittest.TestCase):
                 d = process(name, folder, BRANDS, None, args)
                 self.assertEqual(len(d["images"]), 2)
                 self.assertEqual(d["status"], "COMPLETE")
-                self.assertTrue((folder / "1STPLAYER" / (name + " 1.webp")).exists())
+                self.assertTrue((folder / "1STPLAYER" / (name + " 1.png")).exists())
+                self.assertFalse((folder / "1STPLAYER" / (name + " 1.webp")).exists())
                 self.assertEqual(down.call_count, 2)
             with patch.object(main, "official_search", side_effect=AssertionError("should skip")):
                 resumed = process(name, folder, BRANDS, None, args)

@@ -1,0 +1,108 @@
+Apollo 1120f 1120 1200va Offline UPS Bb5bd03c
+APOLLO 1120F/1120 1200VA Offline UPS
+Apollo 1240 2000VA Offline UPS with Metal Body
+Apollo 2000VA Offline UPS
+Apollo 2000va Offline UPS Df185186
+APOLLO 650VA 300W UPS
+Dahua 1000VA Offline UPS
+Dahua 1000va Offline UPS Ba587bb1
+Dahua 650VA Offline UPS
+Dahua DH-PFM3350-600 650VA Offline UPS
+Digital X 1200VA Offline UPS
+Digital X 1200va Offline UPS Ee730a0d
+Digital X 650VA Offline UPS
+Digital X 850VA Offline UPS
+Hikvision 650VA Offline UPS
+Hikvision DS-UPS600 600VA Offline UPS
+Ideal 7122CW 2200VA Line Interactive UPS
+KENSON 1200VA Offline UPS (Metal Body)
+Kenson 1200va Offline UPS Metal Body 6c8b3b0c
+KENSON 650VA Offline UPS (Metal Body)
+KSTAR 1200VA Offline UPS
+KSTAR 1500VA Offline UPS
+Kstar 1500va Offline UPS 5c3643bd
+KSTAR 2000VA Offline UPS
+Kstar 2000va Offline UPS 917000a9
+KSTAR 3000VA Line Interactive Offline UPS
+Kstar 3000va Line Interactive Offline UPS 5307b2e2
+KSTAR 650VA Offline UPS
+KSTAR 850VA Offline UPS
+Kstar 850va Offline UPS 5180d926
+KSTAR UA100 1000VA Offline UPS
+KSTAR UA120 1200VA Offline UPS
+Marsriva MR-UF1200 1200VA Offline UPS
+Marsriva MR-UF1250 1250VA Smart Line-Interactive UPS
+Marsriva MR-UF2000 2000VA Smart Line-Interactive UPS
+Marsriva Mr Uf2000 2000va Smart Line Interactive UPS E717499f
+Marsriva MR-UF3000 3000VA Smart Line-Interactive UPS
+Marsriva MR-UF650 650VA Offline UPS
+Marsriva MR-UF750 750VA Smart Line-Interactive UPS
+Marsriva MR-UF800 800VA Smart Line-Interactive UPS
+Marsriva Mr Uf800 800va Smart Line Interactive UPS 93cbed80
+MaxGreen 850VA Offline UPS
+MaxGreen MG-LI-EAP 1500VA Offline UPS
+Maxgreen Mg Li Eap 1500va Offline UPS 1e23b2ae
+Maxgreen Mg Li Eap 2000va 2000va UPS Cd8eba97
+MaxGreen MG-LI-EAP-650VA 650VA Offline UPS
+MaxGreen MG-LI-EAP 850VA Offline UPS
+Maxgreen Mg Li Eap 850va Offline UPS 7b74f293
+Maxgreen Mg Li Ksp 1200va Offline UPS A8a0878e
+MaxGreen MG-LI-KSP 1200VA Offline UPS
+MaxGreen MG-LI-KSP 1500VA Offline UPS
+Maxgreen Mg Li Ksp 1500va Offline UPS 22bd860d
+Maxgreen Mg Li Ksp 2000va Offline UPS 5911f863
+MaxGreen MG-LI-KSP 2000VA Offline UPS
+MaxGreen MG-LI-KSP 3000VA Offline UPS
+Maxgreen Mg Li Ksp 3000va Offline UPS C055d317
+MaxGreen MG-LI-KSP 650VA Offline UPS
+Maxgreen Mg Li Ksp 850va Offline UPS 0197028a
+MaxGreen MG-LI-KSP 850VA Offline UPS
+MaxGreen MG-LI-EAP-1200VA 1200VA Offline UPS
+MaxGreen MG1200VA-Gold 1200VA Offline UPS
+MaxGreen MG1500VA-Gold 1500VA Offline UPS
+MaxGreen MG2000VA-Gold 2000VA Offline UPS
+Maxgreen Mg2000va Gold 2000va Offline UPS 34d52edd
+MaxGreen MG-LI-EAP-2000VA 2000VA UPS
+MaxGreen MG650VA-Gold 650VA Offline UPS
+MaxGreen MG850VA-Gold 850VA Offline UPS
+Maxgreen Mg850va Gold 850va Offline UPS Ff69f7dd
+Must EW2110-1200 1200VA Line Interactive Offline UPS
+Must EW2110-2000 2000VA Line Interactive Offline UPS
+Must EW2110-650 650VA Line Interactive Offline UPS
+PC Power 1200VA Offline UPS
+PC Power 650VA Offline UPS
+Power Guard PG 1500VA CS Offline UPS (Plastic Body)
+Power Guard PG 1200VA CS Offline UPS (Plastic Body)
+Power Guard Pg 1200va Cs Offline UPS Plastic Body 7244393a
+Power Guard PG 1200VA PS Offline UPS (Metal Body)
+Power Guard Pg 1200va Ps Offline UPS Metal Body Cf4205cc
+Power Guard Pg 1500va Cs Offline UPS Plastic Body 668af285
+Power Guard PG 2000VA PS Offline UPS (Metal Body)
+Power Guard Pg 2000va Ps Offline UPS Metal Body 6eed81ae
+Power Guard PG 650VA CS Offline UPS (Plastic Body)
+Power Guard PG 650VA PS Offline UPS (Metal Body)
+Power Guard PG 800VA CS Offline UPS (Plastic Body)
+Power Guard Pg 800va Cs Offline UPS Plastic Body A392747f
+Power Pac 1200VA Offline UPS (Plastic Body)
+Power Pac 1200va Offline UPS Plastic Body 1c2a1e06
+Power Pac 1500VA Offline UPS
+Power Pac 1500va Offline UPS D5314c57
+Power Pac 2000VA Offline UPS
+Power Pac 650VA Offline UPS
+Power Pac 850VA Offline UPS
+Prolink 2000VA Offline UPS
+Prolink 2000va Offline UPS E0a51076
+Prolink 3000VA Offline UPS
+Prolink 650VA Offline UPS
+SANTAK Robust R1200 1200VA Offline UPS
+Santak Robust R1200 1200va Offline UPS 57aa620f
+SANTAK Robust R650 650VA Offline UPS
+Vertiv ITON CX 1000VA Offline UPS
+Vertiv Iton Cx 1000va Offline UPS 29162758
+Vertiv ITON CX 650VA Offline UPS
+Zkteco Zkups 1200w Led 2000va 1200w Offline UPS 041d1a1e
+ZKTeco ZKUPS-1200W-LED 2000VA 1200W Offline UPS
+Zkteco Zkups 600w Led 1000va 600w Offline UPS Fa4bb7b7
+ZKTeco ZKUPS-600W-LED 1000VA 600W Offline UPS
+Zkteco Zkups 900w Led 1500va 900w Offline UPS 4b4b6eea
+ZKTeco ZKUPS-900W-LED 1500VA 900W Offline UPS

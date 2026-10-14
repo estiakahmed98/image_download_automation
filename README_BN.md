@@ -59,9 +59,13 @@ Filename থেকে default output category হয়:
 
 Shared manifest-এ verify করে save হওয়ার পর product-এর local `.manifest.json` মুছে যায়। Merge ব্যর্থ হলে local manifest রাখা হয়, যাতে একই command আবার চালিয়ে recover করা যায়। আগের `merge_json.py` দিয়ে local manifest মুছে ফেললেও merged JSON থেকে resume হবে। পুরোনো merged entries নতুনভাবে process হলে তাদের WebP filename সরিয়ে PNG metadata রাখা হয়।
 
+Windows-এ editor/antivirus সাময়িকভাবে file আটকে রাখলে save ১০ সেকেন্ড পর্যন্ত retry করে। Shared JSON save তখনও ব্যর্থ হলে download বন্ধ হয় না: metadata local manifest-এ রেখে বাকি products চেষ্টা করে, ৬০ সেকেন্ড পর এবং শেষে আবার merge চেষ্টা করে। শেষে pending merge থাকলে warning দেখায়; একই command আবার চালালে saved images reuse করে merge করবে। CSV report আটকে থাকলেও বাকি downloads চলবে।
+
 একই command আবার চালালে valid existing PNG-সহ products skip হয়। Missing image ও image-বিহীন FAILED product আবার চেষ্টা করা হয়। কম image পাওয়া product-এর বাকি images খুঁজতে `--retry-incomplete` ব্যবহার করুন।
 
 ## Options
+
+Slow/failed URL automatic retry হয় না; default connect/read timeout ৬ সেকেন্ড। Official search সর্বোচ্চ ২টি page চেষ্টা করে। প্রতি product-এর search/download budget default ৬০ সেকেন্ড; budget শেষ হলে নতুন request শুরু করে না। ১টি image পেলেই সেটি রাখা হয়, তারপর অতিরিক্ত images-এর জন্য সর্বোচ্চ প্রায় ১২ সেকেন্ড চেষ্টা করে। টানা ৩টি failed/duplicate/unusable image অথবা মোট ১২টি image attempt হলে পরের product-এ যায়। চলমান request শেষ হতে timeout পর্যন্ত অতিরিক্ত সময় লাগতে পারে। ৫টি image পাওয়া বাধ্যতামূলক নয়; কিছু পাওয়া গেলে শুধু সংখ্যা বাড়াতে নতুন fallback search করে না। `--timeout` ও `--product-timeout` দিয়ে সময় বদলানো যায়।
 
 Batch scripts অতিরিক্ত options-ও `main.py`-তে পাঠায়:
 

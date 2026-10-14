@@ -1,0 +1,66 @@
+TP-Link TL-SG1428PE 28-Port Gigabit Switch With 24 Port PoE+
+TP-Link TL-SG2210MP JetStream 10-Port Gigabit Smart Switch with 8-Port PoE+
+TP-Link TL-SG2218 JetStream 16-Port Gigabit Smart Switch with 2 SFP Ports
+TP-Link TL-SG2428P JetStream 28-Port Gigabit Smart Switch with 24-Port PoE+
+TP-Link TL-SG3210 JetStream 8-Port Gigabit L2 Managed Switch with 2 SFP Ports
+TP-Link TL-SG3428 JetStream 24-Port Gigabit L2+ Managed Switch with 4 SFP Slots
+TP-Link TL-SG3428MP JetStream 28-Port Gigabit L2+ Managed Switch with 24-Port PoE+
+TP-Link TL-SG3428X JetStream 24-Port Gigabit L2+ Managed Switch with 4 10GE SFP+ Slots
+TP-Link TL-SG3428XMP JetStream 24-Port L2+ Managed Gigabit PoE Switch
+TP-Link TL-SL1218MP 16-Port 10/100 Mbps + 2-Port Gigabit Rackmount Switch with 16-Port PoE+
+TP-Link TL-SL1218P 16-Port 10/100 Mbps + 2-Port Gigabit Rackmount Switch with 16-Port PoE+
+TP-Link TL-SL1226P 24-Port Gigabit Unmanaged PoE+ Switch
+TP-Link TL-SX1008 8-Port 10G Desktop/Rackmount Switch
+TP-Link TL-SX3008F JetStream 8-Port 10GE SFP+ L2+ Managed Switch
+TP-Link TL-SX3016F JetStream 16-Port 10GE SFP+ L2+ Managed Switch
+TP-Link TL-SF1024M 24-Port 10/100Mbps Desktop Switch
+TP-Link TLSG2210P 8 Port Gigabit Smart PoE Switch
+TRENDnet TEG-082WS 8-Port Web Smart Gigabit Switch With 2x SFP Ports
+TRENDnet TEG-204WS 20-Port Gigabit Web Smart Switch
+TRENDnet TEG-284WS 28-Port Gigabit Web Smart Switch
+TRENDnet TEG-30262 24-Port Gigabit Switch with 2 x 10G SFP+ Slots
+TRENDnet TEG-30284 28-Port Web Smart Switch
+TRENDnet TEG-524WS 52-Port Web Smart Gigabit Switch
+TRENDnet TEG-S17 16-Port Unmanaged Gigabit Switch
+TRENDnet TEG-S17D 16-Port Gigabit Desktop Switch
+TRENDnet TEG-S25 24-Port Unmanaged Gigabit Switch
+TRENDnet TEG-S25D 24-Port Gigabit Desktop Switch
+TRENDnet TEG-S51 5-Port Gigabit Desktop Switch
+TRENDnet TEG-S80ES 8-Port EdgeSmart Gigabit Switch
+TRENDnet TEG-S83 8-Port Gigabit Desktop Switch
+TRENDnet TL2-F70284 28 Port Layer 2 Managed SFP Switch
+TRENDnet TL2-F7120 12-Port 10G Layer 2 Managed SFP+ Switch
+TRENDnet TPE-082WS 10-Port Gigabit Web Smart PoE+ Switch
+TRENDnet TPE-1620WS 16 Port Gigabit PoE+ Switch
+TRENDnet TPE-2840WS 28-Port Gigabit Web Smart PoE+ Switch
+TRENDnet TPE-30284 28-Port Gigabit Web Smart PoE+ Switch with 4 x 10G SFP+ slots
+TRENDnet TPE-3102WS 10-Port Multi-Gig Web Smart PoE+ Switch
+TRENDnet TPE-5028WS 28-Port Gigabit Web Smart PoE+ Switch
+TRENDnet TPE-TG160H 16-Port Gigabit PoE+ Switch
+TRENDnet TPE-TG182 18-Port Gigabit PoE+ Switch
+TRENDnet TPE-TG182ES 18-Port EdgeSmart Gigabit PoE+ Switch
+TRENDnet TPE-TG262 26-Port Gigabit PoE+ Switch
+TRENDnet TPE-TG262ES 26-Port EdgeSmart Gigabit PoE+ Switch
+TRENDnet TPE-TG380 8-Port Unmanaged 2.5G PoE+ Switch
+TRENDnet TPE-TG51g 5-Port Gigabit PoE+ Switch
+TRENDnet TPE-TG82ES 8-Port EdgeSmart Gigabit PoE+ Switch
+TRENDnet TPE-TG83 8-Port Gigabit PoE+ Switch
+TRENDnet TPE-TG84 8-Port Gigabit PoE+ Switch
+Vsol V1124-2S 24 Port Unmanaged Gigabit Desktop Switch
+Vsol V3528-P 28 Port Layer 3 Gigabit POE Managed Switch With SFP Port
+Vsol V3528E 28 Port Layer 3 Gigabit Managed Switch With SFP Port
+Zyxel ES1100-24G 24-port FE Unmanaged Switch
+Zyxel GS-105B v3 5-Port Desktop Gigabit Ethernet Switch
+Zyxel GS-105SV2 5-Port Desktop Gigabit Ethernet Media Switch
+Zyxel GS-108B v3 8-Port Desktop Gigabit Ethernet Switch
+Zyxel GS1005HP 5 Port GbE Unmanaged Gigabit PoE Switch (60W)
+Zyxel GS1008HP 8-Port GbE Unmanaged PoE Switch
+Zyxel GS1100-16-EU0103F 16 Port Gigabit Unmanaged Switch
+Zyxel GS1100-24E v3 24-port Gigabit Unmanaged Switch
+Zyxel GS1100 8HP 8-port Unmanaged PoE Switch
+Zyxel GS1200-5HPV2 5-Port Web Managed PoE Gigabit Switch
+Zyxel GS1900-10HP 8-port GbE Smart Managed PoE Switch with GbE Uplink
+Zyxel GS1900-24E v2 24-port GbE Smart Managed Switch
+Zyxel GS1900-24EP 24-port GbE Smart Managed PoE Switch
+Zyxel GS1900-8 8-Port GbE ROHS Smart Managed Switch
+Zyxel MES 3500-24F 24-port FE Fiber L2 Switch with Four GbE Combo Port

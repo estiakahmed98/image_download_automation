@@ -1,0 +1,119 @@
+AMD Athlon 3000G Processor with Radeon Graphics
+AMD Athlon PRO 300GE AM4 Socket Desktop Processor with Radeon Vega 3 Graphics (Rebox)
+AMD Ryzen 3 2200G Quad-Core Processor With Radeon Vega 8 Graphics
+AMD Ryzen 3 3200G Processor with Radeon RX Vega 8 Graphics
+AMD Ryzen 3 4100 Processor
+AMD Ryzen 5 2400G Desktop Processor with Radeon RX Vega 11 Graphics
+AMD Ryzen 5 3400G Processor with Radeon RX Vega 11 Graphics
+AMD RYZEN 5 3500 Processor
+AMD Ryzen 5 3600 Processor
+AMD Ryzen 5 4600G Processor with Radeon Graphics
+AMD Ryzen 5 5500 Processor
+AMD Ryzen 5 5500GT AM4 Processor with Radeon Graphics
+AMD Ryzen 5 5600 Processor
+AMD Ryzen 5 5600G Processor with Radeon Graphics
+AMD Ryzen 5 5600G Processor with Radeon Graphics (Tray Box)
+AMD Ryzen 5 5600GT AM4 Processor with Radeon Graphics
+AMD Ryzen 5 5600X Processor
+AMD Ryzen 5 7400F Processor
+AMD Ryzen 5 7500F Processor
+AMD Ryzen 5 7600 Gaming Processor
+AMD Ryzen 5 7600X Processor
+AMD Ryzen 5 7600X3D Processor
+AMD Ryzen 5 8400F Processor
+AMD Ryzen 5 8500G Processor with Radeon Graphics
+AMD Ryzen 5 8600G Processor with Radeon Graphics
+AMD Ryzen 5 9600X AM5 Desktop Gaming Processor
+AMD Ryzen 5 Pro 2400GE Desktop Processor with Radeon RX Vega 11 Graphics
+AMD Ryzen 5 Pro 4650G Processor with Radeon Graphics
+AMD Ryzen 5 PRO 5650G Processor with Radeon Graphics
+AMD Ryzen 5 PRO 5650GE Processor with Radeon Graphics
+AMD Ryzen 7 3700X Processor
+AMD Ryzen 7 5700G Processor with Radeon Graphics
+AMD Ryzen 7 5700G Processor with Radeon Graphics (Global)
+AMD Ryzen 7 5700X Processor
+AMD Ryzen 7 5700X3D Processor
+AMD Ryzen 7 5800X Processor
+AMD Ryzen 7 5800X3D Processor
+AMD Ryzen 7 7700 Gaming Processor
+AMD Ryzen 7 7700X Processor
+AMD Ryzen 7 7800X3D Processor
+AMD Ryzen 7 8700G Processor with Radeon Graphics
+AMD Ryzen 7 9700X AM5 Desktop Gaming Processor
+AMD Ryzen 7 9800X3D Gaming Processor
+AMD RYZEN 7 9850X3D Gaming Processor
+AMD Ryzen 7 PRO 5750G Processor with Radeon Graphics
+AMD Ryzen 7 PRO 5755G Processor with Radeon Graphics
+AMD Ryzen 9 5900X Processor
+AMD Ryzen 9 5950X Processor
+AMD Ryzen 9 7900X Processor
+AMD Ryzen 9 7900X3D Gaming Processor
+AMD Ryzen 9 7950X Processor
+AMD Ryzen 9 7950X3D Gaming Processor
+AMD Ryzen 9 9900X Gaming Processor
+AMD Ryzen 9 9900X3D Gaming Processor
+AMD Ryzen 9 9950X Gaming Processor
+AMD Ryzen 9 9950X3D Gaming Processor
+AMD Ryzen Threadripper 1900X Processor
+Intel 10th Gen Core i3 10100F Processor
+Intel 12th Gen Core i5-12400 Alder Lake Processor
+Intel 12th Gen Core i5-12400F Alder Lake Processor
+Intel 12th Gen Core i5-12500 Alder Lake Processor
+Intel 12th Gen Core i7-12700 Alder Lake Processor
+Intel 12th Gen Core i7-12700K Alder Lake Processor
+Intel 12th Gen Core i5-12600K Alder Lake Processor
+Intel 12th Gen Core i9-12900K Alder Lake Processor
+Intel Pentium Gold G7400 Alder Lake Processor
+Intel 13th Gen Core i5 13600KF Raptor Lake Processor
+Intel 13th Gen Core i7 13700 Raptor Lake Processor
+Intel 13th Gen Core i7 13700K Raptor Lake Processor
+Intel 13th Gen Core i7 13700KF Raptor Lake Processor
+Intel 13th Gen Core i9 13900K Raptor Lake Processor
+Intel 13th Gen Core i9 13900KF Raptor Lake Processor
+Intel Core i5 14600K 14th Gen Raptor Lake Processor
+Intel Core i5 14600KF 14th Gen Raptor Lake Processor
+Intel Core i7 14700K 14th Gen Raptor Lake Processor
+Intel Core i7 14700KF 14th Gen Raptor Lake Processor
+Intel Core i9 14900K 14th Gen Raptor Lake Processor
+Intel Core i9 14900KF 14th Gen Raptor Lake Processor
+Intel 10th Gen Core i3 10100 Processor
+Intel Core i3 10105 10th Gen Comet Lake Processor
+Intel Core i3 10105F 10th Gen Processor
+Intel Core i3-12100 12th Gen Alder Lake Processor
+Intel Core i3-12100 12th Gen Alder Lake Processor (Tray)
+Intel Core i3-12100F 12th Gen Alder Lake Processor
+Intel Core i3 12100T 12th Gen Alder Lake Processor
+Intel Core i3 13100 13th Gen Processor (TRAY)
+Intel 13th Gen Core i3-13100 Raptor Lake Processor
+Intel Core i3 14100 14th Gen Raptor Lake Processor
+Intel Core i3 14100F 14th Gen Raptor Lake Processor
+Intel 10th Gen Core i5-10400 Processor
+Intel 10th Gen Core i5-10400F Processor
+Intel 10th Gen Core i5-10500 Processor
+Intel Core i5-10500T 10th Gen Processor
+Intel 10th Gen Core i5-10505 Processor
+Intel 11th Gen Core i5-11400 Rocket Lake Processor
+Intel 11th Gen Core i5-11400F Rocket Lake Processor
+Intel 11th Gen Core i5-11500 Rocket Lake Processor
+Intel Core i5-11500T 11th Gen Processor
+Intel Core i5 14400 14th Gen Raptor Lake Processor
+Intel Core i5 14400F 14th Gen Raptor Lake Processor
+Intel Core i5 14500 14th Gen Raptor Lake Processor
+Intel Core i5 14500 14th Gen Raptor Lake Processor (Tray With Fan)
+Intel 10th Gen Core i7-10700 Processor
+Intel 10th Gen Core i7-10700K Processor
+Intel 11th Gen Core i7-11700 Rocket Lake Processor
+Intel Core i7 14700 14th Gen Raptor Lake Processor
+Intel Core i7 14700F 14th Gen Raptor Lake Processor
+Intel 11th Gen Core i9-11900K Rocket Lake Processor
+Intel Core i9 14900F 14th Gen Raptor Lake Processor
+Intel Core Ultra 5 225 Arrow Lake Processor
+Intel Core Ultra 5 245K Arrow Lake Processor
+Intel Core Ultra 5 245KF Arrow Lake Processor
+Intel Core Ultra 5 250K Plus Arrow Lake Processor
+Intel Core Ultra 7 265K Arrow Lake Processor
+Intel Core Ultra 7 265KF Arrow Lake Processor
+Intel Core Ultra 7 270K Plus Arrow Lake Processor
+Intel Core Ultra 9 285K Arrow Lake Processor
+Intel Pentium Gold G6400 10th gen Coffee Lake Processor
+Intel Pentium Gold G6405 Coffee Lake Processor

@@ -51,6 +51,7 @@ def file_lock(path: Path, *, wait: bool = True):
             handle.write(b"\0")
             handle.flush()
         acquired = False
+        deadline = time.monotonic() + 15
         try:
             while not acquired:
                 handle.seek(0)
@@ -67,6 +68,8 @@ def file_lock(path: Path, *, wait: bool = True):
                         raise
                     if not wait:
                         raise ValueError(f"Another terminal is already using this output category: {path.parent}")
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"File lock is busy: {path}") from ex
                     time.sleep(0.1)
             yield
         finally:
@@ -78,6 +81,36 @@ def file_lock(path: Path, *, wait: bool = True):
                 else:
                     import fcntl
                     fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def retry_file_operation(operation, path: Path):
+    """Editors/antivirus can briefly prevent Windows reads or atomic replaces."""
+    deadline = time.monotonic() + 10
+    delay = 0.1
+    warned = False
+    while True:
+        try:
+            return operation()
+        except OSError as ex:
+            transient = (isinstance(ex, PermissionError)
+                         or getattr(ex, "winerror", None) in {5, 32, 33}
+                         or ex.errno in {errno.EACCES, errno.EAGAIN, errno.EBUSY})
+            remaining = deadline - time.monotonic()
+            if not transient or remaining <= 0:
+                raise
+            if not warned:
+                logging.warning("File temporarily unavailable; retrying: %s", path)
+                warned = True
+            time.sleep(min(delay, remaining))
+            delay = min(delay * 2, 1)
+
+
+def remove_temporary(path: Path | None) -> None:
+    if path is not None:
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as ex:
+            logging.warning("Could not remove temporary file %s: %s", path, ex)
 
 
 def write_json(path: Path, data: Any) -> None:
@@ -92,10 +125,9 @@ def write_json(path: Path, data: Any) -> None:
             os.fsync(handle.fileno())
         if json.loads(temporary.read_text(encoding="utf-8")) != data:
             raise ValueError("Manifest verification failed")
-        temporary.replace(path)
+        retry_file_operation(lambda: temporary.replace(path), path)
     finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+        remove_temporary(temporary)
 
 
 def manifest_key(source_file: str) -> str:
@@ -105,7 +137,7 @@ def manifest_key(source_file: str) -> str:
 def read_merged_manifest(path: Path) -> dict[str, dict[str, Any]]:
     if not path.exists():
         return {}
-    entries = json.loads(path.read_text(encoding="utf-8-sig"))
+    entries = json.loads(retry_file_operation(lambda: path.read_text(encoding="utf-8-sig"), path))
     if not isinstance(entries, list):
         raise ValueError(f"Merged manifest must contain a list: {path}")
     result = {}
@@ -118,10 +150,15 @@ def read_merged_manifest(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def merge_product(path: Path, source_file: str, data: dict[str, Any]) -> None:
+    merge_products(path, {source_file: data})
+
+
+def merge_products(path: Path, products: dict[str, dict[str, Any]]) -> None:
     # Read again inside the lock: another terminal may have added products.
     with file_lock(path.with_name(path.name + ".lock")):
         entries = read_merged_manifest(path)
-        entries[manifest_key(source_file)] = {"source_file": source_file, "data": data}
+        for source_file, data in products.items():
+            entries[manifest_key(source_file)] = {"source_file": source_file, "data": data}
         write_json(path, list(entries.values()))
 
 
@@ -251,13 +288,33 @@ class Internet:
     def __init__(self, timeout: float, delay: float):
         self.timeout = timeout
         self.delay = delay
+        self.deadline: float | None = None
+        self.blocked_until: dict[str, float] = {}
         self.session = requests.Session()
+        self.session.max_redirects = 3
         self.session.headers.update(HEADERS)
         # Respect 429; do not retry indefinitely or circumvent access restrictions.
-        retry = Retry(total=2, backoff_factor=1.0, status_forcelist=[500, 502, 503, 504], allowed_methods=["GET"], respect_retry_after_header=True)
+        retry = Retry(total=0, connect=0, read=0, status=0, redirect=0)
         self.session.mount("https://", HTTPAdapter(max_retries=retry))
         self.session.mount("http://", HTTPAdapter(max_retries=retry))
         self.robots: dict[str, RobotFileParser | None] = {}
+
+    def remaining(self) -> float:
+        remaining = self.deadline - time.monotonic() if self.deadline is not None else self.timeout * 2
+        if remaining <= 0:
+            raise TimeoutError("Product time budget exhausted; moving to next product")
+        return remaining
+
+    def request(self, url: str, *, stream: bool = False) -> requests.Response:
+        host = hostname(url)
+        if time.monotonic() < self.blocked_until.get(host, 0):
+            raise PermissionError(f"Temporarily skipping failed host: {host}")
+        timeout = max(0.01, min(self.timeout, self.remaining() / 2))
+        try:
+            return self.session.get(url, timeout=(timeout, timeout), stream=stream)
+        except (requests.Timeout, requests.ConnectionError):
+            self.blocked_until[host] = time.monotonic() + 60
+            raise
 
     def allowed(self, url: str) -> bool:
         if not valid_https_url(url):
@@ -268,13 +325,13 @@ class Internet:
             rp = RobotFileParser()
             rp.set_url(origin + "/robots.txt")
             try:
-                response = self.session.get(origin + "/robots.txt", timeout=min(self.timeout, 8))
-                if response.status_code in {401, 403}:
-                    rp.disallow_all = True
-                elif response.ok:
-                    rp.parse(response.text.splitlines())
-                else:
-                    rp.allow_all = True
+                with self.request(origin + "/robots.txt") as response:
+                    if response.status_code in {401, 403, 429}:
+                        rp.disallow_all = True
+                    elif response.ok:
+                        rp.parse(response.text.splitlines())
+                    else:
+                        rp.allow_all = True
                 self.robots[origin] = rp
             except requests.RequestException:
                 # Unknown robots policy: do not automatically bypass it.
@@ -283,10 +340,11 @@ class Internet:
         return parser is not None and parser.can_fetch(USER_AGENT, url)
 
     def get(self, url: str, *, stream: bool = False) -> requests.Response:
+        self.remaining()
         if not self.allowed(url):
             raise PermissionError(f"Disallowed/unknown robots.txt or invalid URL: {url}")
-        time.sleep(self.delay + random.uniform(0, self.delay * 0.3))
-        resp = self.session.get(url, timeout=self.timeout, stream=stream)
+        time.sleep(min(self.delay + random.uniform(0, self.delay * 0.3), self.remaining()))
+        resp = self.request(url, stream=stream)
         if resp.status_code in (403, 429):
             resp.close()
             raise PermissionError(f"HTTP {resp.status_code}: {url}")
@@ -407,12 +465,12 @@ def page_candidates(page_url: str, product: str, brand: str, model: str, variant
     return choices[:55]
 
 
-def ddgs_results(method: str, query: str, max_results: int) -> list[dict[str, Any]]:
+def ddgs_results(method: str, query: str, max_results: int, timeout: float = 6) -> list[dict[str, Any]]:
     from ddgs import DDGS
-    search = DDGS(timeout=15)
+    search = DDGS(timeout=max(0.1, min(6, timeout)))
     if method == "text":
-        return list(search.text(query, max_results=max_results, safesearch="moderate"))
-    return list(search.images(query, max_results=max_results, safesearch="moderate"))
+        return list(search.text(query, max_results=max_results, safesearch="moderate", backend="duckduckgo"))
+    return list(search.images(query, max_results=max_results, safesearch="moderate", backend="bing"))
 
 
 def official_search(product: str, brand: str, model: str | None, variants: list[str], domains: list[str], net: Internet, browser: bool) -> tuple[list[Candidate], list[str]]:
@@ -420,38 +478,47 @@ def official_search(product: str, brand: str, model: str | None, variants: list[
     errors = []
     if not domains or not model:
         return candidates, ["Brand's official domain or model not configured/identified"]
+    deadline = time.monotonic() + min(15, net.remaining())
+    pages_tried = 0
     for domain in domains:
+        if time.monotonic() >= deadline or pages_tried >= 2:
+            break
         try:
-            found = ddgs_results("text", f'site:{domain} "{model}" product', 8)
+            found = ddgs_results("text", f'site:{domain} "{model}" product', 4, deadline - time.monotonic())
         except Exception as ex:
             errors.append(f"Official search failed ({domain}): {ex}")
             continue
         for item in found:
+            if time.monotonic() >= deadline or pages_tried >= 2:
+                break
             page = item.get("href") or item.get("url") or ""
             if not valid_https_url(page) or not under_domains(page, domains):
                 continue
             if not contains_model(normalize(page + " " + item.get("title", "")), model):
                 continue
             try:
+                pages_tried += 1
                 candidates.extend(page_candidates(page, product, brand, model, variants, net, browser=browser))
-            except (requests.RequestException, PermissionError, ValueError) as ex:
+            except (requests.RequestException, OSError, ValueError) as ex:
                 errors.append(f"Cannot open official page: {type(ex).__name__}: {page}")
-            if len(candidates) >= 12:
+            if candidates:
                 break
-        if len(candidates) >= 12:
+        if candidates:
             break
     candidates.sort(key=lambda c: c.priority)
     return candidates, errors
 
 
-def fallback_search(product: str, brand: str, model: str | None, variants: list[str], domains: list[str]) -> tuple[list[Candidate], list[str]]:
+def fallback_search(product: str, brand: str, model: str | None, variants: list[str], domains: list[str], *, deadline: float | None = None) -> tuple[list[Candidate], list[str]]:
     errors = []
     if not model:
         return [], ["No reliable model token; fallback skipped"]
     result = []
     for query in (f'"{product}" product photo', f'"{brand} {model}" product images'):
+        if deadline is not None and time.monotonic() >= deadline:
+            break
         try:
-            images = ddgs_results("images", query, 25)
+            images = ddgs_results("images", query, 15, 6 if deadline is None else deadline - time.monotonic())
         except Exception as ex:
             errors.append(f"Image search error: {ex}")
             continue
@@ -470,7 +537,7 @@ def fallback_search(product: str, brand: str, model: str | None, variants: list[
             if not trusted and ("stock" in title.lower() or "wallpaper" in title.lower()):
                 continue
             result.append(Candidate(img, source, title, "official_image_search" if trusted else "third_party_review", 4 if trusted else 8))
-        if len(result) >= 20:
+        if result:
             break
     # Third-party images demand human rights/identity review before publishing.
     unique = {}
@@ -481,7 +548,7 @@ def fallback_search(product: str, brand: str, model: str | None, variants: list[
 
 def perceptual_hash(im: Image.Image) -> int:
     px = im.convert("L").resize((9, 8), Image.Resampling.LANCZOS)
-    values = list(px.getdata())
+    values = list(px.tobytes())
     bits = 0
     for y in range(8):
         for x in range(8):
@@ -500,6 +567,7 @@ def download_image(url: str, net: Internet, max_bytes: int, min_side: int) -> tu
             return None
         b = bytearray()
         for chunk in response.iter_content(chunk_size=65536):
+            net.remaining()
             b.extend(chunk)
             if len(b) > max_bytes:
                 return None
@@ -544,10 +612,9 @@ def save_png(image: Image.Image, destination: Path, base: str) -> Path:
         image.save(temporary, format="PNG", optimize=True)
         if not valid_png(temporary):
             raise ValueError("PNG validation failed")
-        temporary.replace(png)
+        retry_file_operation(lambda: temporary.replace(png), png)
     finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+        remove_temporary(temporary)
     return png
 
 
@@ -607,10 +674,19 @@ def prepare_existing_image(row: dict[str, Any], target: Path) -> dict[str, Any] 
 
 def write_csv(path: Path, columns: list[str], rows: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=columns, extrasaction="ignore")
-        writer.writeheader()
-        writer.writerows(rows)
+    temporary = None
+    try:
+        with NamedTemporaryFile(mode="w", encoding="utf-8-sig", newline="", dir=path.parent,
+                                prefix=".report-", suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(rows)
+            handle.flush()
+            os.fsync(handle.fileno())
+        retry_file_operation(lambda: temporary.replace(path), path)
+    finally:
+        remove_temporary(temporary)
 
 
 def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Internet,
@@ -655,18 +731,31 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
         write_json(manifest_path, data)
         logging.info("SKIP (resume, PNG ready) %s", product)
         return data
-    official, errs = (official_search(product, brand, model, variants, official_domains, net, args.browser)
-                      if len(downloaded) < args.max_images else ([], []))
+    try:
+        official, errs = (official_search(product, brand, model, variants, official_domains, net, args.browser)
+                          if len(downloaded) < args.max_images else ([], []))
+    except TimeoutError as ex:
+        official, errs = [], [str(ex)]
     errors.extend(errs)
     candidates = official
+    attempts = 0
+    misses = 0
+    extra_deadline: float | None = None
+    product_deadline = getattr(net, "deadline", None)
     # Fallback only after exhausting download-eligible official galleries.
     def take(choices: list[Candidate]) -> None:
+        nonlocal attempts, misses, extra_deadline
         for choice in choices:
-            if len(downloaded) >= args.max_images:
+            if (len(downloaded) >= args.max_images or attempts >= 12 or misses >= 3
+                    or (product_deadline is not None and time.monotonic() >= product_deadline)
+                    or (extra_deadline is not None and time.monotonic() >= extra_deadline)):
                 break
             if choice.image_url in seen_urls:
                 continue
             seen_urls.add(choice.image_url)
+            attempts += 1
+            before = len(downloaded)
+            logging.info("  Trying image %d (saved %d/%d)", attempts, before, args.max_images)
             try:
                 image_data = download_image(choice.image_url, net, args.max_mb * 1024 * 1024, args.min_side)
                 if not image_data:
@@ -693,18 +782,29 @@ def process(product: str, out_dir: Path, domains: dict[str, list[str]], net: Int
             except (OSError, PermissionError, requests.RequestException, ValueError) as ex:
                 logging.debug("Image unavailable %s (%s)", choice.image_url, ex)
                 continue
+            finally:
+                if len(downloaded) > before:
+                    misses = 0
+                    if extra_deadline is None:
+                        extra_deadline = time.monotonic() + 12
+                else:
+                    misses += 1
 
     take(candidates)
-    if len(downloaded) < args.max_images and not args.official_only:
-        fallback, errs = fallback_search(product, brand, model, variants, official_domains)
+    if (not downloaded and not args.official_only
+            and (product_deadline is None or time.monotonic() < product_deadline)):
+        misses = 0
+        fallback, errs = fallback_search(product, brand, model, variants, official_domains, deadline=product_deadline)
         errors.extend(errs)
         take(fallback)
+    if len(downloaded) < args.max_images:
+        logging.info("  Saved %d image(s); remaining candidates skipped, moving to next product", len(downloaded))
     if not model:
         reason = "Unclear model number: manual review required"
     elif not downloaded:
         reason = "No model-verified downloadable images (check search, page access and image rights)"
     elif len(downloaded) < args.max_images:
-        reason = "Fewer than requested images; review recommended"
+        reason = "Available images saved; remaining images skipped to continue the list"
     else:
         reason = ""
     third_party = any(r["source_type"] == "third_party_review" for r in downloaded)
@@ -746,8 +846,12 @@ def run(args: argparse.Namespace) -> None:
     print(f"Input: {source}\nProducts: {len(products)} | output: {path}\nManifest: {merged_path}")
     # Different categories can run together. Identical output categories cannot.
     with file_lock(path / ".download.lock", wait=False):
-        with file_lock(merged_path.with_name(merged_path.name + ".lock")):
-            previous = read_merged_manifest(merged_path)
+        try:
+            with file_lock(merged_path.with_name(merged_path.name + ".lock")):
+                previous = read_merged_manifest(merged_path)
+        except (OSError, ValueError) as ex:
+            logging.warning("Shared manifest unavailable; continuing with local checkpoints: %s", ex)
+            previous = {}
         net = Internet(args.timeout, args.delay)
         try:
             run_products(args, products, path, output_root, report_dir, brands, net, merged_path, previous)
@@ -760,6 +864,43 @@ def run_products(args: argparse.Namespace, products: list[str], path: Path, outp
                  report_dir: Path, brands: dict[str, list[str]], net: Internet,
                  merged_path: Path, previous: dict[str, dict[str, Any]]) -> None:
     report, image_report = [], []
+    pending: dict[str, dict[str, Any]] = {}
+    next_merge_attempt = 0.0
+    next_report_attempt: dict[Path, float] = {}
+
+    def flush_pending(*, final: bool = False) -> None:
+        nonlocal next_merge_attempt
+        if not pending or (not final and time.monotonic() < next_merge_attempt):
+            return
+        try:
+            merge_products(merged_path, pending)
+        except (OSError, ValueError) as ex:
+            next_merge_attempt = time.monotonic() + 60
+            logging.warning("JSON merge deferred for %d products; local manifests kept, downloads continue: %s",
+                            len(pending), ex)
+            return
+        # Only delete recovery files after the shared atomic save succeeded.
+        for source_file in pending:
+            checkpoint = output_root / source_file
+            try:
+                checkpoint.unlink(missing_ok=True)
+            except OSError as ex:
+                logging.warning("Merged successfully; local checkpoint retained: %s (%s)", checkpoint, ex)
+        pending.clear()
+
+    def save_reports(*, final: bool = False) -> None:
+        for filename, columns, rows in (
+                ("products_status.csv", REPORT_COLUMNS, report),
+                ("image_sources.csv", IMAGE_COLUMNS, image_report)):
+            destination = report_dir / filename
+            if not final and time.monotonic() < next_report_attempt.get(destination, 0):
+                continue
+            try:
+                write_csv(destination, columns, rows)
+            except OSError as ex:
+                next_report_attempt[destination] = time.monotonic() + 60
+                logging.warning("Report save deferred; downloads continue: %s (%s)", destination, ex)
+
     for index, product in enumerate(products, start=1):
         logging.info("[%d/%d] %s", index, len(products), product)
         brand = brand_and_model(product, brands)[0]
@@ -767,17 +908,16 @@ def run_products(args: argparse.Namespace, products: list[str], path: Path, outp
         checkpoint = target / f".{safe_name(product)}.manifest.json"
         source_file = str(checkpoint.relative_to(output_root))
         existing = previous.get(manifest_key(source_file), {}).get("data")
+        net.deadline = time.monotonic() + getattr(args, "product_timeout", 60)
         try:
             data = process(product, path, brands, net, args, existing)
         except Exception as ex:
             logging.exception("Unexpected error for %s", product)
             data = {"product": product, "status": "FAILED", "images": [], "reason": f"Unexpected error: {ex}", "completed_at": now_iso()}
         else:
-            # A verified shared save must finish before removing the checkpoint.
-            # Merge errors stop this run, preserving recoverable local metadata.
-            merge_product(merged_path, source_file, data)
             previous[manifest_key(source_file)] = {"source_file": source_file, "data": data}
-            checkpoint.unlink(missing_ok=True)
+            pending[source_file] = data
+            flush_pending()
         images = data.get("images", [])
         report.append({
             "product": product, "status": data.get("status", "FAILED"),
@@ -791,10 +931,14 @@ def run_products(args: argparse.Namespace, products: list[str], path: Path, outp
                 "image_url": im["image_url"], "source_title": im["source_title"],
                 "width": im["width"], "height": im["height"],
             })
-        write_csv(report_dir / "products_status.csv", REPORT_COLUMNS, report)
-        write_csv(report_dir / "image_sources.csv", IMAGE_COLUMNS, image_report)
+        save_reports()
         count = len(images)
         print(f"{index:>4}/{len(products)} | {data.get('status')} | {count} images | {product}")
+    flush_pending(final=True)
+    save_reports(final=True)
+    if pending:
+        print(f"WARNING: Download list finished; {len(pending)} products still need JSON merge. "
+              "Their local .manifest.json files are preserved. Run the same command again to resume and merge.")
 
 
 def cli() -> argparse.Namespace:
@@ -809,7 +953,8 @@ def cli() -> argparse.Namespace:
     p.add_argument("--limit", type=int, default=0, help="0 processes all products")
     p.add_argument("--min-side", type=int, default=400, help="Smallest dimension in pixels; reduce if images are skipped")
     p.add_argument("--max-mb", type=int, default=25)
-    p.add_argument("--timeout", type=float, default=20)
+    p.add_argument("--timeout", type=float, default=6, help="Per connection/read timeout; failed URLs are not retried")
+    p.add_argument("--product-timeout", type=float, default=60, help="Download/search budget per product in seconds")
     p.add_argument("--delay", type=float, default=1.5, help="Polite pause between website requests")
     p.add_argument("--official-only", action="store_true", help="Never fetch photos from third-party sites")
     p.add_argument("--browser", action="store_true", help="Render JS product galleries via optional Playwright+Chromium")
@@ -823,7 +968,7 @@ def cli() -> argparse.Namespace:
     if not 1 <= args.max_images <= 20:
         p.error("--max-images must be 1 to 20")
     if (args.min_side < 50 or args.max_mb < 1 or args.delay < 0 or args.limit < 0
-            or args.timeout <= 0):
+            or args.timeout <= 0 or args.product_timeout <= 0):
         p.error("Invalid limits")
     logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG if args.verbose else logging.INFO)
     return args

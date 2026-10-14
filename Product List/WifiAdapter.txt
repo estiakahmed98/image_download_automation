@@ -1,0 +1,56 @@
+Cudy WE1300 AC1300 Dual-Band PCI-E WiFi Adapter
+Cudy WE3000 AX3000 Dual-Band WiFi 6 PCIe Adapter
+Cudy WE650 AC650 Dual-Band PCI-E WiFi Adapter
+Cudy WE9300 BE9300 9300Mbps Tri-Band WiFi 7 PCI-E Adapter
+Cudy WU1300S AC1300 High Gain Dual Band USB WiFi Adapter
+Cudy WU1400 AC1300 High Gain Dual Band USB WiFi Adapter
+Cudy WU300 AX300 Wi-Fi 6 USB Adapter
+Cudy WU650 AC650 Dual Band Nano USB WiFi Adapter
+Cudy WU900 AX900 Dual-Band Wi-Fi 6 USB Adapter
+D-LINK DWA-131 Wireless-N Nano USB WiFi Adapter
+D-LINK DWA-171 AC600 MU-MIMO USB WiFi Adapter
+Dtech TB-2974 USB WiFi Adapter
+Mercusys MA14N AX300 Wireless USB Wi-Fi Adapter
+Mercusys MA20N AC650 Nano Dual-Band USB Wi-Fi Adapter
+Mercusys MA30H AC1300 Dual Band USB Wi-Fi Adapter
+Mercusys MU6H AC650 Dual Band USB WiFi Adapter
+Mercusys MW150US N150 Nano USB WiFi Adapter
+Mercusys MW300UH 300Mbps High Gain 2 Antenna USB WiFi Adapter
+Mercusys MW300UM N300 Mini USB WiFi Adapter
+Tenda U1 300Mbps Ultra-Fast USB WiFi Adapter
+Tenda U2 AX300 USB High Gain Wi-Fi Adapter
+Tenda W311MI AX300 Nano USB WiFi Adapter
+TP-Link Archer T2U Nano AC600 Dual Band Mini USB WiFi Adapter
+TP-Link Archer T2U Plus AC600 Dual Band USB WiFi Adapter
+TP-Link Archer T2UB Nano AC600 Dual Band USB Bluetooth & WiFi Adapter
+TP-Link Archer T3U Nano AC1300 Dual Band MU-MIMO USB WiFi Adapter
+TP-Link Archer T3U Plus AC1300 Dual Band USB WiFi Adapter
+TP-Link Archer T4U AC1300 High Gain Dual Band USB WiFi Adapter
+TP-Link Archer TX1U Nano AX300 USB Wi-Fi 6 Adapter
+TP-Link Archer TX20U Nano AX1800 Dual Band USB WiFi Adapter
+TP-Link Archer TX20U AX1800 Dual Band Wi-Fi 6 USB Adapter
+TP-Link TL-WN725N 150Mbps USB WiFi Adapter
+TP-Link TL-WN823N 300Mbps Mini Wireless N USB WiFi Adapter
+TP-Link WN722N 150Mbps High Gain USB WiFi Adapter
+TRENDnet TBW-108UB Micro N150 Wireless & Bluetooth USB Adapter
+TRENDnet TEW-808UBM Micro AC1200 Dual Band USB WiFi Adapter
+Ugreen AC650 Dual Band USB Wifi Adapter #20204
+Ugreen CM492 AC1300 Dual Band USB Wifi Adapter #50340
+Ugreen CM496 AC650 Dual Band USB Wifi Adapter #90339
+UGREEN CM762 AX900 Dual Band USB Wifi Adapter #35264
+Ugreen CM763 AX900 Dual Band USB Wi-Fi Adapter #35265
+Vention IPTB0 1 to 2 RJ45 Splitter Adapter
+Vention KDRB0 USB Dual Band Wi-Fi Adapter
+Vention KDTB0 AC650 USB Dual Band Wi-Fi Adapter
+Vention KDVB0 AX300 USB Wi-Fi Adapter
+Vention KDWB0 AX900 USB Dual Band Wi-Fi Adapter
+Xtreme WU350 300Mbps Wifi USB Adapter
+Xtreme WU650 650Mbps Dual Band USB Wi-Fi Adapter
+Xtreme WU650BT 650Mbps Dual Band Bluetooth & Wifi USB Adapter
+Yuanxin X-5501 150Mbps USB Wi-Fi Adapter
+Yuanxin X-5502 300Mbps Single Band USB Wi-Fi Adapter
+Yuanxin X-5503 650Mbps Dual Band USB Wi-Fi Adapter
+Yuanxin X-5505 1300Mbps Dual Band USB Wi-Fi Adapter
+Yuanxin X-5506 AX900M WiFi 6 & Bluetooth USB Adapter
+Yuanxin X-5507 600Mbps Dual Band Wi-Fi USB Adapter
+Yuanxin X-5508 900Mbps Dual Band Wi-Fi & Bluetooth USB Adapter
